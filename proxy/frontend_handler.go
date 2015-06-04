@@ -14,8 +14,8 @@ type FrontendHandler struct {
 }
 
 func (h *FrontendHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-
 	hostKey := h.getHostKey(req)
+	log.Infof("Received requested for host [%v]", hostKey)
 	if !h.backend.hasBackend(hostKey) {
 		http.Error(rw, "Bad hostKey", 400)
 		return
