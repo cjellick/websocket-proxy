@@ -13,6 +13,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/armon/go-proxyproto"
 	"github.com/gorilla/mux"
 )
 
@@ -98,7 +99,15 @@ func (s *ProxyStarter) StartProxy() error {
 		Handler: pcRouter,
 		Addr:    s.Config.ListenAddr,
 	}
-	err := server.ListenAndServe()
+
+	listener, err := net.Listen("tcp", s.Config.ListenAddr)
+	if err != nil {
+		log.Fatalf("Couldn't create listener: %s\n", err)
+	}
+
+	proxyListener := &proxyproto.Listener{listener}
+
+	err = server.Serve(proxyListener)
 	return err
 }
 
