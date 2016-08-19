@@ -1,7 +1,7 @@
 package proxy
 
 import (
-	"crypto/tls"
+	ctls "crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"io"
@@ -22,7 +22,7 @@ import (
 
 	"github.com/rancher/websocket-proxy/k8s"
 	"github.com/rancher/websocket-proxy/proxy/proxyprotocol"
-	proxyTls "github.com/rancher/websocket-proxy/proxy/tls"
+	"github.com/rancher/websocket-proxy/proxy/tls"
 )
 
 var slashRegex = regexp.MustCompile("[/]{2,}")
@@ -144,7 +144,7 @@ func (s *Starter) StartProxy() error {
 		}
 
 		if s.Config.TLSListenAddr == s.Config.ListenAddr {
-			listener = &proxyTls.SplitListener{
+			listener = &tls.SplitListener{
 				Listener: listener,
 				Config:   tlsConfig,
 			}
@@ -156,7 +156,7 @@ func (s *Starter) StartProxy() error {
 			tlsListener = &proxyprotocol.Listener{tlsListener}
 			go func() {
 				defer listener.Close()
-				log.Error(server.Serve(tls.NewListener(tlsListener, tlsConfig)))
+				log.Error(server.Serve(ctls.NewListener(tlsListener, tlsConfig)))
 			}()
 		}
 	}
@@ -165,7 +165,7 @@ func (s *Starter) StartProxy() error {
 	return err
 }
 
-func (s *Starter) setupTLS() (*tls.Config, error) {
+func (s *Starter) setupTLS() (*ctls.Config, error) {
 	if s.Config.CattleAccessKey == "" {
 		return nil, fmt.Errorf("No access key supplied to download cert")
 	}
@@ -175,7 +175,7 @@ func (s *Starter) setupTLS() (*tls.Config, error) {
 		return nil, err
 	}
 
-	tlsCert, err := tls.X509KeyPair(certs.Cert, certs.Key)
+	tlsCert, err := ctls.X509KeyPair(certs.Cert, certs.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -186,9 +186,9 @@ func (s *Starter) setupTLS() (*tls.Config, error) {
 	}
 
 	tlsConfig := tlsconfig.ServerDefault
-	tlsConfig.ClientAuth = tls.VerifyClientCertIfGiven
+	tlsConfig.ClientAuth = ctls.VerifyClientCertIfGiven
 	tlsConfig.ClientCAs = clientCas
-	tlsConfig.Certificates = []tls.Certificate{tlsCert}
+	tlsConfig.Certificates = []ctls.Certificate{tlsCert}
 
 	return &tlsConfig, nil
 }
